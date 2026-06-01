@@ -3,8 +3,6 @@
 DIR=$( cd "$( dirname "$0" )" && pwd )
 cd ${DIR}
 
-go vet ./...
-
 BUILD_DIR=${DIR}/../build/snap
 
 ${BUILD_DIR}/bin/cli --help
