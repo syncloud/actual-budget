@@ -41,6 +41,20 @@ take its `client.grant()` path (plain auth-code exchange, still with PKCE) and
 skip that check. The OIDC flow (discover → authorize → grant → userinfo) then
 completes and the first OIDC user becomes the owner.
 
+## Self-contained runtime (no host-OS lib dependency)
+
+`actual/build.sh` copies the full `ldd` closure of `node` and every native
+`.node` module, plus the dynamic loader, into `node/lib`, and node is launched
+through the bundled loader (`node/node.sh`) — like `nginx/bin/nginx.sh`. The snap
+therefore depends only on the kernel ABI, and the same approach makes arm/v7 work
+(the platform image there lacks `libatomic.so.1`).
+
+## Architectures
+
+amd64, arm64 and arm (v7) — the upstream image is multi-arch. amd64 runs the full
+device + Playwright tests; arm64/arm build, package, run on-arch binary tests, and
+publish.
+
 ## Known follow-ups (initial WIP)
 
 - `NODE_TLS_REJECT_UNAUTHORIZED=0` is set so the server can reach the platform
@@ -49,9 +63,6 @@ completes and the first OIDC user becomes the owner.
   platform CA before any real release.**
 - actual-server listens on TCP `127.0.0.1:5006`; it does not bind a Unix socket,
   so nginx proxies to localhost rather than a socket.
-- The e2e adds an account with a starting balance (validated); adding a manual
-  transaction is currently best-effort and not asserted.
-- amd64 only for now; arm64 is a follow-up.
 
 ## Build
 
