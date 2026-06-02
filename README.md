@@ -58,12 +58,12 @@ amd64, arm64 and arm (v7) — the upstream image is multi-arch. amd64 runs the f
 device + Playwright tests; arm64/arm build, package, run on-arch binary tests, and
 publish.
 
+The server reaches Authelia over its public https URL, so it trusts the platform
+CA via `NODE_EXTRA_CA_CERTS=/var/snap/platform/current/syncloud.ca.crt` (the same
+CA paperless uses via `REQUESTS_CA_BUNDLE`).
+
 ## Known follow-ups (initial WIP)
 
-- `NODE_TLS_REJECT_UNAUTHORIZED=0` is set so the server can reach the platform
-  Authelia over its untrusted-by-Node cert for OIDC discovery/token exchange.
-  **Replace with `NODE_EXTRA_CA_CERTS` / `--use-system-ca` pointing at the
-  platform CA before any real release.**
 - actual-server listens on TCP `127.0.0.1:5006`; it does not bind a Unix socket,
   so nginx proxies to localhost rather than a socket.
 
