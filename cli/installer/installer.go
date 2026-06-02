@@ -171,7 +171,13 @@ func (i *Installer) GenerateConfig(storageDir string) error {
 		appUrl,
 	)
 
-	return os.WriteFile(path.Join(DataDir, "config.json"), []byte(cfg), 0640)
+	if err := os.WriteFile(path.Join(DataDir, "config.json"), []byte(cfg), 0640); err != nil {
+		return err
+	}
+
+	bootstrap := fmt.Sprintf(`{"openId":{"issuer":%q,"client_id":%q,"client_secret":%q,"server_hostname":%q}}`,
+		authUrl, App, password, appUrl)
+	return os.WriteFile(path.Join(DataDir, "bootstrap.json"), []byte(bootstrap), 0640)
 }
 
 func (i *Installer) FixPermissions() error {

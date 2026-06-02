@@ -8,6 +8,16 @@ export async function loginViaAuthelia (
 ) {
   await page.goto(baseURL)
 
+  const signIn = page.getByRole('button', { name: /sign in/i }).first()
+  try {
+    await signIn.waitFor({ state: 'visible', timeout: 15_000 })
+    await Promise.all([
+      page.waitForURL((url) => new URL(url.toString()).host.startsWith('auth.'), { timeout: 30_000 }).catch(() => {}),
+      signIn.click()
+    ])
+  } catch (_) {
+  }
+
   try {
     await page.waitForURL((url) => new URL(url.toString()).host.startsWith('auth.'), { timeout: 15_000 })
   } catch (_) {

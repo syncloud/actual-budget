@@ -23,12 +23,22 @@ UI and stores all budget data; there is no separate "sync-only" component.
 Pinned in `.drone.jsonnet` as `local version = '...'` (the
 `actualbudget/actual-server` Docker tag).
 
+## OIDC bootstrap
+
+actual-server only switches into OpenID mode once the instance is *bootstrapped*
+(its `auth` table has an active `openid` row). Config alone leaves it on the
+password-setup screen. So `configure` writes `bootstrap.json` (the openId
+client), and `bin/bootstrap.mjs` — forked by `service.actual.sh` — waits for the
+server then POSTs `/account/bootstrap`. The first OIDC login becomes the owner.
+
 ## Known follow-ups (initial WIP)
 
+- `NODE_TLS_REJECT_UNAUTHORIZED=0` is set so the server can reach the platform
+  Authelia over its untrusted-by-Node cert for OIDC discovery/token exchange.
+  **Replace with `NODE_EXTRA_CA_CERTS` / `--use-system-ca` pointing at the
+  platform CA before any real release.**
 - actual-server listens on TCP `127.0.0.1:5006`; it does not bind a Unix socket,
   so nginx proxies to localhost rather than a socket.
-- OIDC discovery hits the public auth URL; verify on-device resolution and the
-  first-user bootstrap flow.
 - Playwright budget-flow selectors target Actual 25.2.x and may need tuning.
 - amd64 only for now; arm64 is a follow-up.
 
