@@ -10,9 +10,6 @@ mkdir -p ${APP_OUT} ${NODE_DIR}
 
 cp -r /app/. ${APP_OUT}
 
-# Bundle the runtime wholesale (node + its libs + the dynamic loader) so the snap
-# depends only on the kernel ABI, not on the host OS libs. node is launched via the
-# bundled loader (node.sh), the same approach as nginx/bin/nginx.sh.
 cp -r /usr ${NODE_DIR}/usr
 cp -r /lib ${NODE_DIR}/lib
 [ -e /lib64 ] && cp -r /lib64 ${NODE_DIR}/lib64 || true
