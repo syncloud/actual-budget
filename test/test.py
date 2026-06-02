@@ -54,4 +54,4 @@ def test_index(app_domain):
 
 
 def test_actual_listening(device):
-    device.run_ssh('ss -ltn | grep 5006', retries=20)
+    device.run_ssh('test -S /var/snap/actual-budget/current/actual.sock', retries=20)

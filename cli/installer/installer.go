@@ -2,19 +2,31 @@ package installer
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	cp "github.com/otiai10/copy"
+	"github.com/syncloud/golib/config"
 	"github.com/syncloud/golib/linux"
 	"github.com/syncloud/golib/platform"
 	"go.uber.org/zap"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path"
 	"time"
 )
 
-const backendUrl = "http://127.0.0.1:5006"
+type Variables struct {
+	App          string
+	StorageDir   string
+	ServerFiles  string
+	UserFiles    string
+	AuthUrl      string
+	AppUrl       string
+	ClientSecret string
+	Socket       string
+}
 
 const (
 	App       = "actual-budget"
@@ -156,52 +168,42 @@ func (i *Installer) GenerateConfig(storageDir string) error {
 		return err
 	}
 
-	cfg := fmt.Sprintf(`{
-  "port": 5006,
-  "hostname": "127.0.0.1",
-  "dataDir": %q,
-  "serverFiles": %q,
-  "userFiles": %q,
-  "trustedProxies": ["127.0.0.0/8", "::1/128"],
-  "loginMethod": "openid",
-  "allowedLoginMethods": ["openid"],
-  "openId": {
-    "issuer": %q,
-    "client_id": %q,
-    "client_secret": %q,
-    "server_hostname": %q,
-    "authMethod": "oauth2"
-  }
-}
-`,
-		storageDir,
-		path.Join(storageDir, "server-files"),
-		path.Join(storageDir, "user-files"),
-		authUrl,
-		App,
-		password,
-		appUrl,
-	)
-
-	if err := os.WriteFile(path.Join(DataDir, "config.json"), []byte(cfg), 0640); err != nil {
-		return err
+	variables := Variables{
+		App:          App,
+		StorageDir:   storageDir,
+		ServerFiles:  path.Join(storageDir, "server-files"),
+		UserFiles:    path.Join(storageDir, "user-files"),
+		AuthUrl:      authUrl,
+		AppUrl:       appUrl,
+		ClientSecret: password,
+		Socket:       path.Join(DataDir, "actual.sock"),
 	}
 
-	bootstrap := fmt.Sprintf(`{"openId":{"issuer":%q,"client_id":%q,"client_secret":%q,"server_hostname":%q,"authMethod":"oauth2"}}`,
-		authUrl, App, password, appUrl)
-	return os.WriteFile(path.Join(DataDir, "bootstrap.json"), []byte(bootstrap), 0640)
+	return config.Generate(
+		path.Join(AppDir, "config"),
+		path.Join(DataDir, "config"),
+		variables,
+	)
 }
 
 func (i *Installer) BootstrapOpenID() error {
-	payload, err := os.ReadFile(path.Join(DataDir, "bootstrap.json"))
+	payload, err := os.ReadFile(path.Join(DataDir, "config", "bootstrap.json"))
 	if err != nil {
 		return err
 	}
-	client := &http.Client{Timeout: 10 * time.Second}
+	socket := path.Join(DataDir, "actual.sock")
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+				return (&net.Dialer{}).DialContext(ctx, "unix", socket)
+			},
+		},
+	}
 
 	ready := false
 	for attempt := 0; attempt < 60; attempt++ {
-		resp, err := client.Get(backendUrl + "/account/needs-bootstrap")
+		resp, err := client.Get("http://localhost/account/needs-bootstrap")
 		if err == nil {
 			body, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
@@ -221,7 +223,7 @@ func (i *Installer) BootstrapOpenID() error {
 	}
 
 	for attempt := 0; attempt < 30; attempt++ {
-		resp, err := client.Post(backendUrl+"/account/bootstrap", "application/json", bytes.NewReader(payload))
+		resp, err := client.Post("http://localhost/account/bootstrap", "application/json", bytes.NewReader(payload))
 		if err == nil {
 			body, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()

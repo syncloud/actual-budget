@@ -1,11 +1,10 @@
 #!/bin/bash -e
 
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )
-
-export ACTUAL_CONFIG_PATH=/var/snap/actual-budget/current/config.json
+export ACTUAL_CONFIG_PATH=${SNAP_DATA}/config/config.json
 export NODE_ENV=production
 export NODE_EXTRA_CA_CERTS=/var/snap/platform/current/syncloud.ca.crt
 
-cd ${DIR}/actual
+/bin/rm -f ${SNAP_DATA}/actual.sock
 
-exec ${DIR}/node/node.sh ${DIR}/actual/app.js
+cd ${SNAP}/actual
+exec ${SNAP}/node/node.sh ${SNAP}/actual/app.js
