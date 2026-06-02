@@ -1,17 +1,28 @@
-import { Page, expect } from '@playwright/test'
+import { Page, TestInfo, expect } from '@playwright/test'
+import { shoot } from './screenshot'
 
 async function clickFirst (page: Page, names: RegExp[]): Promise<boolean> {
   for (const name of names) {
     const byRole = page.getByRole('button', { name }).first()
-    if (await byRole.count() > 0) {
+    if (await byRole.isVisible().catch(() => false)) {
       try { await byRole.click({ timeout: 8_000 }); return true } catch (_) {}
     }
+  }
+  for (const name of names) {
     const byText = page.getByText(name).first()
-    if (await byText.count() > 0) {
+    if (await byText.isVisible().catch(() => false)) {
       try { await byText.click({ timeout: 8_000 }); return true } catch (_) {}
     }
   }
   return false
+}
+
+export async function dismissToasts (page: Page) {
+  const closers = page.getByRole('button', { name: /close|dismiss/i })
+  const n = await closers.count().catch(() => 0)
+  for (let i = 0; i < n; i++) {
+    await closers.nth(i).click({ timeout: 2_000 }).catch(() => {})
+  }
 }
 
 export async function openApp (page: Page) {
@@ -21,50 +32,63 @@ export async function openApp (page: Page) {
 }
 
 export async function ensureBudgetOpen (page: Page, name = 'Test Budget') {
-  const onBudget = page.locator('[data-testid="budget-table"], [aria-label="Budget"]').first()
-  if (await onBudget.count() > 0 && await onBudget.isVisible().catch(() => false)) {
-    return
-  }
-  const created = await clickFirst(page, [
-    /create new budget/i,
-    /start fresh/i,
+  const addAccountPrompt = page.getByText(/you need to .*add an account|add an account/i).first()
+  if (await addAccountPrompt.isVisible().catch(() => false)) return
+
+  await clickFirst(page, [
     /create blank budget/i,
-    /new budget/i
+    /start fresh/i,
+    /create new budget/i,
+    /create.*budget/i
   ])
-  if (created) {
-    const nameField = page.getByLabel(/budget name/i).first()
-    if (await nameField.count() > 0) {
-      await nameField.fill(name)
-      await clickFirst(page, [/create/i, /next/i, /continue/i])
-    }
-  }
-  await page.waitForLoadState('networkidle').catch(() => {})
-  await expect(page.locator('#root')).toBeVisible()
+
+  await page
+    .getByRole('button', { name: /^add account$/i })
+    .first()
+    .waitFor({ state: 'visible', timeout: 90_000 })
+  await dismissToasts(page)
 }
 
-export async function addAccount (page: Page, name = 'Checking', balance = '1000') {
-  await clickFirst(page, [/add account/i, /add an account/i, /create account/i])
-  const nameField = page.getByLabel(/account name|name/i).first()
-  await nameField.waitFor({ state: 'visible', timeout: 15_000 })
+export async function addAccount (page: Page, name = 'Checking', balance = '1000', info?: TestInfo) {
+  const addBtn = page.getByRole('button', { name: /^add account$/i }).first()
+  await addBtn.waitFor({ state: 'visible', timeout: 60_000 })
+  await addBtn.click()
+
+  await clickFirst(page, [/create local account/i])
+  if (info) await shoot(page, info, 'account-modal')
+
+  const nameField = page
+    .getByPlaceholder(/account name|name/i)
+    .or(page.getByLabel(/account name|name/i))
+    .or(page.getByRole('textbox').first())
+    .first()
+  await nameField.waitFor({ state: 'visible', timeout: 20_000 })
   await nameField.fill(name)
-  const balanceField = page.getByLabel(/balance/i).first()
-  if (await balanceField.count() > 0) {
+
+  const balanceField = page
+    .getByPlaceholder(/balance|0\.00/i)
+    .or(page.getByLabel(/balance/i))
+    .first()
+  if (await balanceField.isVisible().catch(() => false)) {
     await balanceField.fill(balance)
   }
-  await clickFirst(page, [/^create$/i, /add account/i, /create account/i, /save/i])
-  await expect(page.getByText(name).first()).toBeVisible({ timeout: 20_000 })
+
+  await clickFirst(page, [/^create$/i, /^add$/i, /create account/i, /^add account$/i])
+  await expect(page.getByText(name, { exact: false }).first()).toBeVisible({ timeout: 20_000 })
 }
 
-export async function addTransaction (page: Page, payee = 'Groceries', amount = '-42.50') {
-  await clickFirst(page, [/^add$/i, /add new transaction/i, /new transaction/i, /^\+$/])
-  const amountField = page.getByLabel(/amount/i).first()
-  if (await amountField.count() > 0) {
+export async function addTransaction (page: Page, payee = 'Groceries', amount = '-42.50', info?: TestInfo) {
+  await clickFirst(page, [/add new transaction/i, /new transaction/i, /^add$/i])
+  if (info) await shoot(page, info, 'transaction-modal')
+
+  const amountField = page.getByPlaceholder(/amount|0\.00/i).or(page.getByLabel(/amount/i)).first()
+  if (await amountField.isVisible().catch(() => false)) {
     await amountField.fill(amount)
   }
-  const payeeField = page.getByLabel(/payee/i).first()
-  if (await payeeField.count() > 0) {
+  const payeeField = page.getByPlaceholder(/payee/i).or(page.getByLabel(/payee/i)).first()
+  if (await payeeField.isVisible().catch(() => false)) {
     await payeeField.fill(payee)
   }
-  await clickFirst(page, [/^add$/i, /^save$/i])
+  await clickFirst(page, [/^add$/i, /^save$/i, /add transaction/i])
   await page.waitForLoadState('networkidle').catch(() => {})
 }

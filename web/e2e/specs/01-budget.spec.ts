@@ -16,10 +16,10 @@ test('login via OpenID, create a budget, add an account and a transaction', asyn
   await ensureBudgetOpen(page, 'Test Budget')
   await shoot(page, info, 'budget')
 
-  await addAccount(page, 'Checking', '1000')
+  await addAccount(page, 'Checking', '1000', info)
   await shoot(page, info, 'account-created')
 
-  await addTransaction(page, 'Groceries', '-42.50')
+  await addTransaction(page, 'Groceries', '-42.50', info)
   await shoot(page, info, 'transaction-added')
 
   await expect(page.locator('#root')).toBeVisible()
