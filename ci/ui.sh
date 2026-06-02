@@ -7,11 +7,18 @@ NAME=actual-budget
 export PLAYWRIGHT_DOMAIN="${PLAYWRIGHT_DOMAIN:-bookworm.com}"
 export PLAYWRIGHT_USER="${PLAYWRIGHT_USER:-user}"
 export PLAYWRIGHT_PASSWORD="${PLAYWRIGHT_PASSWORD:-Password1}"
+export PLAYWRIGHT_PROJECT="${PROJECT}"
+export PLAYWRIGHT_DEVICE_HOST="${NAME}.${PLAYWRIGHT_DOMAIN}"
+export PLAYWRIGHT_SSH_PASSWORD="${PLAYWRIGHT_PASSWORD}"
+export PLAYWRIGHT_ARTIFACT_DIR="${DIR}/artifact"
 
 DOMAIN="$PLAYWRIGHT_DOMAIN"
 APP_DOMAIN="${NAME}.${DOMAIN}"
 getent hosts $APP_DOMAIN | sed "s/$APP_DOMAIN/auth.$DOMAIN/g" | tee -a /etc/hosts
 cat /etc/hosts
+
+apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq sshpass openssh-client >/dev/null 2>&1 || true
+mkdir -p ${PLAYWRIGHT_ARTIFACT_DIR}
 
 cd ${DIR}/web/e2e
 npm ci
@@ -24,13 +31,6 @@ ART=${DIR}/artifact
 SHOTS=${ART}/screenshots-${PROJECT}
 VIDEOS=${ART}/videos-${PROJECT}
 mkdir -p ${SHOTS} ${VIDEOS}
-
-DEVICE="actual-budget.${PLAYWRIGHT_DOMAIN:-bookworm.com}"
-apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq sshpass openssh-client >/dev/null 2>&1 || true
-sshpass -p "${PLAYWRIGHT_PASSWORD:-Password1}" ssh \
-    -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 \
-    root@${DEVICE} "journalctl -u snap.actual-budget.actual --no-pager | tail -500" \
-    > ${ART}/actual.${PROJECT}.journal.log 2>&1 || true
 
 if [ -d test-results ]; then
     for d in test-results/*/; do
