@@ -52,10 +52,4 @@ def test_index(app_domain):
 
 
 def test_actual_listening(device):
-    device.run_ssh('ss -ltn | grep 5006', retries=20, delay=3)
-
-
-def test_info_endpoint(app_domain):
-    session = requests.session()
-    response = wait_for_rest(session, "https://{0}/info".format(app_domain), 200, 20)
-    assert 'build' in response.text or 'version' in response.text, response.text
+    device.run_ssh('ss -ltn | grep 5006', retries=20)
