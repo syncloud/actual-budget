@@ -14,6 +14,6 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0
 
 cd ${DIR}/actual
 
-${DIR}/node/bin/node ${DIR}/bin/bootstrap.mjs &
+${DIR}/node/node.sh ${DIR}/bin/bootstrap.mjs &
 
-exec ${DIR}/node/bin/node ${DIR}/actual/app.js
+exec ${DIR}/node/node.sh ${DIR}/actual/app.js

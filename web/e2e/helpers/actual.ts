@@ -101,24 +101,17 @@ export async function addTransactions (page: Page, txns: Txn[], info?: TestInfo)
     const negative = t.amount.trim().startsWith('-')
     const magnitude = t.amount.replace('-', '')
 
-    const payee = row.getByTestId('payee-field').or(row.getByTestId('payee')).first()
-    if (await payee.isVisible().catch(() => false)) {
-      await payee.click()
-      await page.keyboard.type(t.payee)
-      await page.keyboard.press('Tab')
-    }
-
-    const amount = (negative ? row.getByTestId('amount-outflow') : row.getByTestId('amount-inflow'))
-      .or(row.getByTestId('amount-input'))
-      .or(row.getByTestId('amount'))
-      .first()
-    if (await amount.isVisible().catch(() => false)) {
-      await amount.click()
-      await page.keyboard.type(magnitude)
-    }
-
-    await page.keyboard.press('Enter')
-    await page.waitForTimeout(800)
+    const addRow = page.getByTestId('new-transaction').first()
+    const payeeCell = addRow.getByTestId('payee').first()
+    await payeeCell.click()
+    await page.keyboard.type(t.payee)
+    await page.keyboard.press('Tab')   // commit payee -> Notes
+    await page.keyboard.press('Tab')   // Notes -> Category
+    await page.keyboard.press('Tab')   // Category (left uncategorized) -> Payment
+    if (!negative) await page.keyboard.press('Tab')   // Payment -> Deposit
+    await page.keyboard.type(magnitude)
+    await page.keyboard.press('Enter') // commit row, reopens a fresh add row
+    await page.waitForTimeout(700)
   }
 
   await page.keyboard.press('Escape').catch(() => {})

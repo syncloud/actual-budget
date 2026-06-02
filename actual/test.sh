@@ -2,7 +2,7 @@
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-NODE=${DIR}/../build/snap/node/bin/node
+NODE=${DIR}/../build/snap/node/node.sh
 APP=${DIR}/../build/snap/actual
 
 ${NODE} --version
