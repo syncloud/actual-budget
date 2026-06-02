@@ -12,10 +12,8 @@ cp -r /app/. ${APP_OUT}
 
 cp -r /usr ${NODE_DIR}/usr
 cp -r /lib ${NODE_DIR}/lib
-[ -e /lib64 ] && cp -r /lib64 ${NODE_DIR}/lib64 || true
 
 cp ${DIR}/node.sh ${NODE_DIR}/node.sh
-chmod +x ${NODE_DIR}/node.sh
 
 ${NODE_DIR}/node.sh --version
 du -sh ${APP_OUT} ${NODE_DIR}
