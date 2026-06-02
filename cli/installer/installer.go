@@ -158,7 +158,7 @@ func (i *Installer) GenerateConfig(storageDir string) error {
     "client_id": %q,
     "client_secret": %q,
     "server_hostname": %q,
-    "authMethod": "openid"
+    "authMethod": "oauth2"
   }
 }
 `,
@@ -175,7 +175,7 @@ func (i *Installer) GenerateConfig(storageDir string) error {
 		return err
 	}
 
-	bootstrap := fmt.Sprintf(`{"openId":{"issuer":%q,"client_id":%q,"client_secret":%q,"server_hostname":%q}}`,
+	bootstrap := fmt.Sprintf(`{"openId":{"issuer":%q,"client_id":%q,"client_secret":%q,"server_hostname":%q,"authMethod":"oauth2"}}`,
 		authUrl, App, password, appUrl)
 	return os.WriteFile(path.Join(DataDir, "bootstrap.json"), []byte(bootstrap), 0640)
 }
