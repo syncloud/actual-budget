@@ -43,11 +43,12 @@ completes and the first OIDC user becomes the owner.
 
 ## Self-contained runtime (no host-OS lib dependency)
 
-`actual/build.sh` copies the full `ldd` closure of `node` and every native
-`.node` module, plus the dynamic loader, into `node/lib`, and node is launched
-through the bundled loader (`node/node.sh`) — like `nginx/bin/nginx.sh`. The snap
-therefore depends only on the kernel ABI, and the same approach makes arm/v7 work
-(the platform image there lacks `libatomic.so.1`).
+`actual/build.sh` copies the runtime wholesale (`/usr`, `/lib`, `/lib64`) out of
+the upstream image, and node is launched through the bundled loader
+(`actual/node.sh`, committed and copied into the snap) — the same approach as
+`nginx/bin/nginx.sh`. The snap therefore depends only on the kernel ABI, not on
+host OS libs (this is also what makes arm/v7 work without the platform's
+`libatomic`).
 
 ## Architectures
 
