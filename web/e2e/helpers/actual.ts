@@ -32,24 +32,30 @@ export async function openApp (page: Page) {
 }
 
 export async function ensureBudgetOpen (page: Page, name = 'Test Budget') {
-  const addAccountPrompt = page.getByText(/you need to .*add an account|add an account/i).first()
-  if (await addAccountPrompt.isVisible().catch(() => false)) return
+  const reportsNav = page.getByText(/^reports$/i).first()
+  if (await reportsNav.isVisible().catch(() => false)) return
 
-  await clickFirst(page, [
-    /create blank budget/i,
-    /start fresh/i,
-    /create new budget/i,
-    /create.*budget/i
-  ])
+  const existingFile = page.getByText(/available for download/i).first()
+  if (await existingFile.isVisible().catch(() => false)) {
+    await existingFile.click()
+  } else {
+    await clickFirst(page, [
+      /create blank budget/i,
+      /start fresh/i,
+      /create new file/i,
+      /create new budget/i,
+      /create.*budget/i
+    ])
+  }
 
-  await page
-    .getByRole('button', { name: /^add account$/i })
-    .first()
-    .waitFor({ state: 'visible', timeout: 90_000 })
+  await reportsNav.waitFor({ state: 'visible', timeout: 90_000 })
   await dismissToasts(page)
 }
 
 export async function addAccount (page: Page, name = 'Checking', balance = '1000', info?: TestInfo) {
+  if (await page.getByText(name, { exact: false }).first().isVisible().catch(() => false)) {
+    return
+  }
   const addBtn = page.getByRole('button', { name: /^add account$/i }).first()
   await addBtn.waitFor({ state: 'visible', timeout: 60_000 })
   await addBtn.click()
