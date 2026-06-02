@@ -2,7 +2,6 @@ import { defineConfig, devices } from '@playwright/test'
 
 const domain = process.env.PLAYWRIGHT_DOMAIN || 'bookworm.com'
 const baseURL = `https://actual-budget.${domain}`
-const storageState = '.auth/state.json'
 
 export default defineConfig({
   testDir: './specs',
@@ -11,17 +10,15 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list']],
-  globalSetup: './global-setup.ts',
   use: {
     baseURL,
     ignoreHTTPSErrors: true,
-    storageState,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure'
+    video: 'on'
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], baseURL, ignoreHTTPSErrors: true, storageState } },
-    { name: 'mobile', use: { ...devices['Pixel 7'], baseURL, ignoreHTTPSErrors: true, storageState } }
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], baseURL, ignoreHTTPSErrors: true } },
+    { name: 'mobile', use: { ...devices['Pixel 7'], baseURL, ignoreHTTPSErrors: true } }
   ]
 })
