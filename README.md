@@ -31,6 +31,16 @@ password-setup screen. So `configure` writes `bootstrap.json` (the openId
 client), and `bin/bootstrap.mjs` — forked by `service.actual.sh` — waits for the
 server then POSTs `/account/bootstrap`. The first OIDC login becomes the owner.
 
+## OIDC token exchange (Authelia / RFC 9207)
+
+Authelia advertises `authorization_response_iss_parameter_supported`, so
+openid-client's `client.callback()` demands the `iss` response param, which
+actual-server does not forward (`RPError: iss missing from the response`). The
+stored config therefore uses `authMethod: "oauth2"`, which makes actual-server
+take its `client.grant()` path (plain auth-code exchange, still with PKCE) and
+skip that check. The OIDC flow (discover → authorize → grant → userinfo) then
+completes and the first OIDC user becomes the owner.
+
 ## Known follow-ups (initial WIP)
 
 - `NODE_TLS_REJECT_UNAUTHORIZED=0` is set so the server can reach the platform
@@ -39,7 +49,8 @@ server then POSTs `/account/bootstrap`. The first OIDC login becomes the owner.
   platform CA before any real release.**
 - actual-server listens on TCP `127.0.0.1:5006`; it does not bind a Unix socket,
   so nginx proxies to localhost rather than a socket.
-- Playwright budget-flow selectors target Actual 25.2.x and may need tuning.
+- The e2e adds an account with a starting balance (validated); adding a manual
+  transaction is currently best-effort and not asserted.
 - amd64 only for now; arm64 is a follow-up.
 
 ## Build
