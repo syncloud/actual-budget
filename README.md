@@ -27,9 +27,11 @@ Pinned in `.drone.jsonnet` as `local version = '...'` (the
 
 actual-server only switches into OpenID mode once the instance is *bootstrapped*
 (its `auth` table has an active `openid` row). Config alone leaves it on the
-password-setup screen. So `configure` writes `bootstrap.json` (the openId
-client), and `bin/bootstrap.mjs` — forked by `service.actual.sh` — waits for the
-server then POSTs `/account/bootstrap`. The first OIDC login becomes the owner.
+password-setup screen. The install hook registers the OIDC client with Authelia
+and writes `bootstrap.json`; the **configure hook** (which runs after the daemon
+is up) then waits for the server on `127.0.0.1:5006` and POSTs
+`/account/bootstrap` (`installer.BootstrapOpenID`). The first OIDC login becomes
+the owner.
 
 ## OIDC token exchange (Authelia / RFC 9207)
 

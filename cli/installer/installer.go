@@ -1,14 +1,20 @@
 package installer
 
 import (
+	"bytes"
 	"fmt"
 	cp "github.com/otiai10/copy"
 	"github.com/syncloud/golib/linux"
 	"github.com/syncloud/golib/platform"
 	"go.uber.org/zap"
+	"io"
+	"net/http"
 	"os"
 	"path"
+	"time"
 )
+
+const backendUrl = "http://127.0.0.1:5006"
 
 const (
 	App       = "actual-budget"
@@ -41,9 +47,15 @@ func (i *Installer) Install() error {
 
 func (i *Installer) Configure() error {
 	if i.IsInstalled() {
-		return i.Upgrade()
+		if err := i.Upgrade(); err != nil {
+			return err
+		}
+	} else {
+		if err := i.Initialize(); err != nil {
+			return err
+		}
 	}
-	return i.Initialize()
+	return i.BootstrapOpenID()
 }
 
 func (i *Installer) IsInstalled() bool {
@@ -178,6 +190,52 @@ func (i *Installer) GenerateConfig(storageDir string) error {
 	bootstrap := fmt.Sprintf(`{"openId":{"issuer":%q,"client_id":%q,"client_secret":%q,"server_hostname":%q,"authMethod":"oauth2"}}`,
 		authUrl, App, password, appUrl)
 	return os.WriteFile(path.Join(DataDir, "bootstrap.json"), []byte(bootstrap), 0640)
+}
+
+func (i *Installer) BootstrapOpenID() error {
+	payload, err := os.ReadFile(path.Join(DataDir, "bootstrap.json"))
+	if err != nil {
+		return err
+	}
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	ready := false
+	for attempt := 0; attempt < 60; attempt++ {
+		resp, err := client.Get(backendUrl + "/account/needs-bootstrap")
+		if err == nil {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				if bytes.Contains(body, []byte(`"bootstrapped":true`)) {
+					i.logger.Info("openid already bootstrapped")
+					return nil
+				}
+				ready = true
+				break
+			}
+		}
+		time.Sleep(2 * time.Second)
+	}
+	if !ready {
+		return fmt.Errorf("actual server did not become ready for openid bootstrap")
+	}
+
+	for attempt := 0; attempt < 30; attempt++ {
+		resp, err := client.Post(backendUrl+"/account/bootstrap", "application/json", bytes.NewReader(payload))
+		if err == nil {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK || bytes.Contains(body, []byte("already-bootstrapped")) {
+				i.logger.Info("openid bootstrap ok")
+				return nil
+			}
+			i.logger.Info("openid bootstrap retry", zap.Int("status", resp.StatusCode), zap.ByteString("body", body))
+		} else {
+			i.logger.Info("openid bootstrap error", zap.Error(err))
+		}
+		time.Sleep(3 * time.Second)
+	}
+	return fmt.Errorf("openid bootstrap failed")
 }
 
 func (i *Installer) FixPermissions() error {

@@ -3,7 +3,6 @@
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )
 
 export ACTUAL_CONFIG_PATH=/var/snap/actual-budget/current/config.json
-export ACTUAL_BOOTSTRAP_PATH=/var/snap/actual-budget/current/bootstrap.json
 export NODE_ENV=production
 
 # The server talks to the platform's Authelia over its public https URL for OIDC
@@ -13,7 +12,5 @@ export NODE_ENV=production
 export NODE_TLS_REJECT_UNAUTHORIZED=0
 
 cd ${DIR}/actual
-
-${DIR}/node/node.sh ${DIR}/bin/bootstrap.mjs &
 
 exec ${DIR}/node/node.sh ${DIR}/actual/app.js
