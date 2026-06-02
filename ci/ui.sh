@@ -1,14 +1,21 @@
 #!/bin/bash -ex
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )
-cd ${DIR}/web/e2e
 
-npm ci
 PROJECT="${1:-desktop}"
+NAME=actual-budget
+export PLAYWRIGHT_DOMAIN="${PLAYWRIGHT_DOMAIN:-bookworm.com}"
+export PLAYWRIGHT_USER="${PLAYWRIGHT_USER:-user}"
+export PLAYWRIGHT_PASSWORD="${PLAYWRIGHT_PASSWORD:-Password1}"
+
+DOMAIN="$PLAYWRIGHT_DOMAIN"
+APP_DOMAIN="${NAME}.${DOMAIN}"
+getent hosts $APP_DOMAIN | sed "s/$APP_DOMAIN/auth.$DOMAIN/g" | tee -a /etc/hosts
+cat /etc/hosts
+
+cd ${DIR}/web/e2e
+npm ci
 set +e
-PLAYWRIGHT_DOMAIN=${PLAYWRIGHT_DOMAIN:-bookworm.com} \
-PLAYWRIGHT_USER=${PLAYWRIGHT_USER:-user} \
-PLAYWRIGHT_PASSWORD=${PLAYWRIGHT_PASSWORD:-Password1} \
 npx playwright test --project="${PROJECT}"
 EXIT=$?
 set -e

@@ -12,7 +12,7 @@ local distro_default = 'bookworm';
 local platform_image(distro, arch) =
   'syncloud/platform-' + distro + '-' + arch + ':' + platform;
 
-local build(arch, full) = [{
+local build(arch, ui) = [{
   kind: 'pipeline',
   type: 'docker',
   name: arch,
@@ -81,32 +81,17 @@ local build(arch, full) = [{
         './package.sh ' + name + ' $VERSION',
       ],
     },
-  ] + (if full then [
+  ] + [
          {
            name: 'test ' + distro_default,
            image: 'python:' + python,
-           commands: [
-             'DOMAIN="' + distro_default + '.com"',
-             'APP_DOMAIN="' + name + '.' + distro_default + '.com"',
-             'getent hosts $APP_DOMAIN | sed "s/$APP_DOMAIN/auth.$DOMAIN/g" | tee -a /etc/hosts',
-             'cat /etc/hosts',
-             'APP_ARCHIVE_PATH=$(realpath $(cat package.name))',
-             'cd test',
-             './deps.sh',
-             'py.test -x -s test.py --distro=' + distro_default + ' --app-archive-path=$APP_ARCHIVE_PATH --app=' + name + ' --arch=' + arch,
-           ],
+           commands: ['./ci/integration.sh ' + arch],
          },
-       ] else []) + (if full then [
+       ] + (if ui then [
          {
            name: 'test-ui-' + projectName,
            image: playwright,
-           commands: [
-             'DOMAIN="' + distro_default + '.com"',
-             'APP_DOMAIN="' + name + '.' + distro_default + '.com"',
-             'getent hosts $APP_DOMAIN | sed "s/$APP_DOMAIN/auth.$DOMAIN/g" | tee -a /etc/hosts',
-             'cat /etc/hosts',
-             'PLAYWRIGHT_DOMAIN=' + distro_default + '.com ./ci/ui.sh ' + projectName,
-           ],
+           commands: ['./ci/ui.sh ' + projectName],
          }
          for projectName in ['desktop', 'mobile']
        ] else []) + [
@@ -144,7 +129,7 @@ local build(arch, full) = [{
   trigger: {
     event: ['push'],
   },
-  services: if full then [
+  services: [
     {
       name: name + '.' + distro_default + '.com',
       image: platform_image(distro_default, arch),
@@ -154,7 +139,7 @@ local build(arch, full) = [{
         { name: 'dev', path: '/dev' },
       ],
     },
-  ] else [],
+  ],
   volumes: [
     { name: 'dbus', host: { path: '/var/run/dbus' } },
     { name: 'dev', host: { path: '/dev' } },
