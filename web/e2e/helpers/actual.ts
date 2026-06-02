@@ -54,7 +54,7 @@ export async function addAccount (page: Page, name = 'Checking', balance = '1000
   await addBtn.waitFor({ state: 'visible', timeout: 60_000 })
   await addBtn.click()
 
-  await clickFirst(page, [/create local account/i])
+  await clickFirst(page, [/create a local account/i, /create local account/i])
   if (info) await shoot(page, info, 'account-modal')
 
   const nameField = page
