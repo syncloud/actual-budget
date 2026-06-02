@@ -83,18 +83,44 @@ export async function addAccount (page: Page, name = 'Checking', balance = '1000
   await expect(page.getByText(name, { exact: false }).first()).toBeVisible({ timeout: 20_000 })
 }
 
-export async function addTransaction (page: Page, payee = 'Groceries', amount = '-42.50', info?: TestInfo) {
-  await clickFirst(page, [/add new transaction/i, /new transaction/i, /^add$/i])
-  if (info) await shoot(page, info, 'transaction-modal')
+export type Txn = { payee: string, amount: string }
 
-  const amountField = page.getByPlaceholder(/amount|0\.00/i).or(page.getByLabel(/amount/i)).first()
-  if (await amountField.isVisible().catch(() => false)) {
-    await amountField.fill(amount)
+export async function addTransactions (page: Page, txns: Txn[], info?: TestInfo) {
+  const addNew = page
+    .getByRole('button', { name: /^add new$/i })
+    .or(page.getByTestId('add-transaction-button'))
+    .first()
+  await addNew.waitFor({ state: 'visible', timeout: 20_000 })
+  await addNew.click()
+
+  const row = page.getByTestId('new-transaction').first()
+  await row.waitFor({ state: 'visible', timeout: 20_000 })
+  if (info) await shoot(page, info, 'transaction-row')
+
+  for (const t of txns) {
+    const negative = t.amount.trim().startsWith('-')
+    const magnitude = t.amount.replace('-', '')
+
+    const payee = row.getByTestId('payee-field').or(row.getByTestId('payee')).first()
+    if (await payee.isVisible().catch(() => false)) {
+      await payee.click()
+      await page.keyboard.type(t.payee)
+      await page.keyboard.press('Tab')
+    }
+
+    const amount = (negative ? row.getByTestId('amount-outflow') : row.getByTestId('amount-inflow'))
+      .or(row.getByTestId('amount-input'))
+      .or(row.getByTestId('amount'))
+      .first()
+    if (await amount.isVisible().catch(() => false)) {
+      await amount.click()
+      await page.keyboard.type(magnitude)
+    }
+
+    await page.keyboard.press('Enter')
+    await page.waitForTimeout(800)
   }
-  const payeeField = page.getByPlaceholder(/payee/i).or(page.getByLabel(/payee/i)).first()
-  if (await payeeField.isVisible().catch(() => false)) {
-    await payeeField.fill(payee)
-  }
-  await clickFirst(page, [/^add$/i, /^save$/i, /add transaction/i])
+
+  await page.keyboard.press('Escape').catch(() => {})
   await page.waitForLoadState('networkidle').catch(() => {})
 }

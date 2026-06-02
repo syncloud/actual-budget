@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { shoot } from '../helpers/screenshot'
 import { loginViaAuthelia } from '../helpers/auth'
-import { ensureBudgetOpen, addAccount, addTransaction } from '../helpers/actual'
+import { ensureBudgetOpen, addAccount, addTransactions } from '../helpers/actual'
 
 test.use({ video: 'on' })
 
@@ -20,8 +20,13 @@ test('login via OpenID, create a budget, add an account and a transaction', asyn
     await addAccount(page, 'Checking', '1000', info)
     await shoot(page, info, 'account-created')
 
-    await addTransaction(page, 'Groceries', '-42.50', info)
-    await shoot(page, info, 'transaction-added')
+    await addTransactions(page, [
+      { payee: 'Salary', amount: '2500.00' },
+      { payee: 'Groceries', amount: '-42.50' },
+      { payee: 'Coffee Shop', amount: '-4.75' },
+      { payee: 'Electric Bill', amount: '-88.20' }
+    ], info)
+    await shoot(page, info, 'transactions-added')
   }
 
   await expect(page.locator('#root')).toBeVisible()
