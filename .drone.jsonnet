@@ -4,8 +4,8 @@ local go = '1.24.0';
 local nginx = '1.24.0';
 local python = '3.12-slim-bookworm';
 local platform = '26.04.10';
-local playwright = 'mcr.microsoft.com/playwright:v1.59.1-jammy';
-local publisher_image = 'syncloud/store-publisher:stable-291';
+local playwright = 'v1.59.1-jammy';
+local store_publisher = 'stable-291';
 local distros = ['bookworm', 'buster'];
 local distro_default = 'bookworm';
 
@@ -21,13 +21,6 @@ local build(arch, ui) = [{
     arch: arch,
   },
   steps: [
-    {
-      name: 'version',
-      image: 'alpine:3.17.0',
-      commands: [
-        'echo $DRONE_BUILD_NUMBER > version',
-      ],
-    },
     {
       name: 'nginx',
       image: 'nginx:' + nginx,
@@ -77,8 +70,7 @@ local build(arch, ui) = [{
       name: 'package',
       image: 'debian:bookworm-slim',
       commands: [
-        'VERSION=$(cat version)',
-        './package.sh ' + name + ' $VERSION',
+        './package.sh ' + name + ' $DRONE_BUILD_NUMBER',
       ],
     },
   ] + [
@@ -89,15 +81,15 @@ local build(arch, ui) = [{
          },
        ] + (if ui then [
          {
-           name: 'test-ui-' + projectName,
-           image: playwright,
-           commands: ['./ci/ui.sh ' + projectName],
+           name: 'test-ui-' + project,
+           image: 'mcr.microsoft.com/playwright:' + playwright,
+           commands: ['./ci/ui.sh ' + project],
          }
-         for projectName in ['desktop', 'mobile']
+         for project in ['desktop', 'mobile']
        ] else []) + [
     {
       name: 'publish',
-      image: publisher_image,
+      image: 'syncloud/store-publisher:' + store_publisher,
       environment: {
         SYNCLOUD_TOKEN: { from_secret: 'SYNCLOUD_TOKEN' },
       },
