@@ -1,71 +1,7 @@
 # Actual Budget — Syncloud app
 
-Packages [Actual Budget](https://actualbudget.org/) (the self-hosted
-`actualbudget/actual-server`) as a Syncloud app. The server both serves the web
-UI and stores all budget data; there is no separate "sync-only" component.
-
-## Shape
-
-- `actual/` — vendors `/app` and the `node` binary out of the official
-  `actualbudget/actual-server:<version>` Docker image (Debian/glibc, Node 22).
-- `cli/` — Go + Cobra install/configure/refresh hooks. `configure` registers an
-  OIDC client with the platform (Authelia) and writes `config.json` for
-  actual-server with `loginMethod: openid`.
-- `nginx/` + `config/nginx.conf` — reverse proxy on the platform `web.socket`
-  to actual-server on `127.0.0.1:5006`.
-- `web/e2e/` — Playwright tests: log in through Authelia, create a budget, add
-  an account and a transaction, and screenshot each step.
-- `test/` — pytest integration test (install on a device, assert it serves).
-- `.drone.jsonnet` — CI, publishing via the `syncloud/store-publisher` image.
-
-## Upstream version
-
-Pinned in `.drone.jsonnet` as `local version = '...'` (the
-`actualbudget/actual-server` Docker tag).
-
-## OIDC bootstrap
-
-actual-server only switches into OpenID mode once the instance is *bootstrapped*
-(its `auth` table has an active `openid` row). Config alone leaves it on the
-password-setup screen. The install hook registers the OIDC client with Authelia
-and writes `bootstrap.json`; the **configure hook** (which runs after the daemon
-is up) then waits for the server on `127.0.0.1:5006` and POSTs
-`/account/bootstrap` (`installer.BootstrapOpenID`). The first OIDC login becomes
-the owner.
-
-## OIDC token exchange (Authelia / RFC 9207)
-
-Authelia advertises `authorization_response_iss_parameter_supported`, so
-openid-client's `client.callback()` demands the `iss` response param, which
-actual-server does not forward (`RPError: iss missing from the response`). The
-stored config therefore uses `authMethod: "oauth2"`, which makes actual-server
-take its `client.grant()` path (plain auth-code exchange, still with PKCE) and
-skip that check. The OIDC flow (discover → authorize → grant → userinfo) then
-completes and the first OIDC user becomes the owner.
-
-## Self-contained runtime (no host-OS lib dependency)
-
-`actual/build.sh` copies the runtime wholesale (`/usr`, `/lib`, `/lib64`) out of
-the upstream image, and node is launched through the bundled loader
-(`actual/node.sh`, committed and copied into the snap) — the same approach as
-`nginx/bin/nginx.sh`. The snap therefore depends only on the kernel ABI, not on
-host OS libs (this is also what makes arm/v7 work without the platform's
-`libatomic`).
-
-## Architectures
-
-amd64, arm64 and arm (v7) — the upstream image is multi-arch. amd64 runs the full
-device + Playwright tests; arm64/arm build, package, run on-arch binary tests, and
-publish.
-
-The server reaches Authelia over its public https URL, so it trusts the platform
-CA via `NODE_EXTRA_CA_CERTS=/var/snap/platform/current/syncloud.ca.crt` (the same
-CA paperless uses via `REQUESTS_CA_BUNDLE`).
-
-## Known follow-ups (initial WIP)
-
-- actual-server listens on TCP `127.0.0.1:5006`; it does not bind a Unix socket,
-  so nginx proxies to localhost rather than a socket.
+Packages the self-hosted [Actual Budget](https://actualbudget.org/) server
+(`actualbudget/actual-server`) as a Syncloud app.
 
 ## Build
 
@@ -73,4 +9,4 @@ CA paperless uses via `REQUESTS_CA_BUNDLE`).
 
 ## Install on a device
 
-    snap install --devmode ./actual-budget_<ver>_<arch>.snap
+    snap install --devmode ./actual-budget_<version>_<arch>.snap
