@@ -115,7 +115,7 @@ func (i *Installer) StorageChange() error {
 	if err != nil {
 		return err
 	}
-	if err := i.createMissingDirs(
+	if err := linux.CreateMissingDirs(
 		path.Join(storageDir, "server-files"),
 		path.Join(storageDir, "user-files"),
 	); err != nil {
@@ -139,7 +139,7 @@ func (i *Installer) UpdateConfigs() error {
 	if err := i.StorageChange(); err != nil {
 		return err
 	}
-	if err := i.createMissingDirs(path.Join(DataDir, "nginx")); err != nil {
+	if err := linux.CreateMissingDirs(path.Join(DataDir, "nginx")); err != nil {
 		return err
 	}
 
@@ -250,21 +250,3 @@ func (i *Installer) FixPermissions() error {
 func (i *Installer) BackupPreStop() error    { return i.PreRefresh() }
 func (i *Installer) RestorePreStart() error  { return i.PostRefresh() }
 func (i *Installer) RestorePostStart() error { return i.Configure() }
-
-func (i *Installer) createMissingDirs(dirs ...string) error {
-	for _, dir := range dirs {
-		if err := createMissingDir(dir); err != nil {
-			i.logger.Error("cannot create dir", zap.String("dir", dir), zap.Error(err))
-			return err
-		}
-	}
-	return nil
-}
-
-func createMissingDir(dir string) error {
-	_, err := os.Stat(dir)
-	if os.IsNotExist(err) {
-		return os.MkdirAll(dir, 0755)
-	}
-	return nil
-}
