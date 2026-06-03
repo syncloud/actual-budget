@@ -19,6 +19,9 @@ import (
 
 type Variables struct {
 	App          string
+	AppDir       string
+	DataDir      string
+	CommonDir    string
 	StorageDir   string
 	ServerFiles  string
 	UserFiles    string
@@ -167,6 +170,9 @@ func (i *Installer) GenerateConfig(storageDir string) error {
 
 	variables := Variables{
 		App:          App,
+		AppDir:       AppDir,
+		DataDir:      DataDir,
+		CommonDir:    CommonDir,
 		StorageDir:   storageDir,
 		ServerFiles:  path.Join(storageDir, "server-files"),
 		UserFiles:    path.Join(storageDir, "user-files"),
