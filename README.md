@@ -1,6 +1,6 @@
 # Actual Budget — Syncloud app
 
-Packages the self-hosted [Actual Budget](https://actualbudget.org/) server
+Packages the [Actual Budget](https://actualbudget.org/) server
 (`actualbudget/actual-server`) as a Syncloud app.
 
 ## Build

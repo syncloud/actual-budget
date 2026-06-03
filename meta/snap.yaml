@@ -1,6 +1,6 @@
 name: actual-budget
 summary: Actual Budget
-description: Local-first personal finance and budgeting, self-hosted
+description: Local-first personal finance and budgeting
 
 apps:
   actual:
