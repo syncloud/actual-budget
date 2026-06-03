@@ -2,9 +2,9 @@
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )
 
-ARCH=$1
+DISTRO=$1
+ARCH=$2
 NAME=actual-budget
-DISTRO=bookworm
 DOMAIN="${DISTRO}.com"
 APP_DOMAIN="${NAME}.${DOMAIN}"
 

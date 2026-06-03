@@ -7,7 +7,6 @@ local platform = '26.04.10';
 local playwright = 'v1.59.1-jammy';
 local store_publisher = 'stable-291';
 local distros = ['bookworm', 'buster'];
-local distro_default = 'bookworm';
 
 local platform_image(distro, arch) =
   'syncloud/platform-' + distro + '-' + arch + ':' + platform;
@@ -75,10 +74,11 @@ local build(arch, ui) = [{
     },
   ] + [
          {
-           name: 'test ' + distro_default,
+           name: 'test ' + distro,
            image: 'python:' + python,
-           commands: ['./ci/integration.sh ' + arch],
-         },
+           commands: ['./ci/integration.sh ' + distro + ' ' + arch],
+         }
+         for distro in distros
        ] + (if ui then [
          {
            name: 'test-ui-' + project,
@@ -123,15 +123,16 @@ local build(arch, ui) = [{
   },
   services: [
     {
-      name: name + '.' + distro_default + '.com',
-      image: platform_image(distro_default, arch),
+      name: name + '.' + distro + '.com',
+      image: platform_image(distro, arch),
       privileged: true,
       entrypoint: ['/bin/sh', '-c', "mkdir -p /etc/systemd/system/snapd.service.d && printf '[Service]\\nExecStartPost=/bin/sh -c \"/usr/bin/snap set system refresh.hold=2099-01-01T00:00:00Z\"\\n' > /etc/systemd/system/snapd.service.d/disable-refresh.conf && exec /sbin/init"],
       volumes: [
         { name: 'dbus', path: '/var/run/dbus' },
         { name: 'dev', path: '/dev' },
       ],
-    },
+    }
+    for distro in distros
   ],
   volumes: [
     { name: 'dbus', host: { path: '/var/run/dbus' } },
