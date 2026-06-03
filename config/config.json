@@ -1,0 +1,17 @@
+{
+  "port": "{{ .Socket }}",
+  "hostname": "127.0.0.1",
+  "dataDir": "{{ .StorageDir }}",
+  "serverFiles": "{{ .ServerFiles }}",
+  "userFiles": "{{ .UserFiles }}",
+  "trustedProxies": ["127.0.0.0/8", "::1/128"],
+  "loginMethod": "openid",
+  "allowedLoginMethods": ["openid"],
+  "openId": {
+    "issuer": "{{ .AuthUrl }}",
+    "client_id": "{{ .App }}",
+    "client_secret": "{{ .ClientSecret }}",
+    "server_hostname": "{{ .AppUrl }}",
+    "authMethod": "oauth2"
+  }
+}
