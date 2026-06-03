@@ -76,7 +76,7 @@ local build(arch, ui) = [{
          {
            name: 'test ' + distro,
            image: 'python:' + python,
-           commands: ['./ci/integration.sh ' + distro + ' ' + arch],
+           commands: ['./test/ci-test.sh ' + distro + ' ' + arch],
          }
          for distro in distros
        ] + (if ui then [
