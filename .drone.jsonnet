@@ -83,7 +83,7 @@ local build(arch, ui) = [{
          {
            name: 'test-ui-' + project,
            image: 'mcr.microsoft.com/playwright:' + playwright,
-           commands: ['./ci/ui.sh ' + project],
+           commands: ['./web/e2e/ci-ui.sh ' + project],
          }
          for project in ['desktop', 'mobile']
        ] else []) + [

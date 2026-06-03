@@ -1,6 +1,7 @@
 #!/bin/bash -ex
 
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+ROOT=$( cd "${DIR}/../.." && pwd )
 
 PROJECT="${1:-desktop}"
 NAME=actual-budget
@@ -10,7 +11,7 @@ export PLAYWRIGHT_PASSWORD="${PLAYWRIGHT_PASSWORD:-Password1}"
 export PLAYWRIGHT_PROJECT="${PROJECT}"
 export PLAYWRIGHT_DEVICE_HOST="${NAME}.${PLAYWRIGHT_DOMAIN}"
 export PLAYWRIGHT_SSH_PASSWORD="${PLAYWRIGHT_PASSWORD}"
-export PLAYWRIGHT_ARTIFACT_DIR="${DIR}/artifact"
+export PLAYWRIGHT_ARTIFACT_DIR="${ROOT}/artifact"
 
 DOMAIN="$PLAYWRIGHT_DOMAIN"
 APP_DOMAIN="${NAME}.${DOMAIN}"
@@ -19,6 +20,6 @@ cat /etc/hosts
 
 apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq sshpass openssh-client >/dev/null 2>&1 || true
 
-cd ${DIR}/web/e2e
+cd ${DIR}
 npm ci
 npx playwright test --project="${PROJECT}"
