@@ -10,6 +10,7 @@ fi
 
 NAME=$1
 VERSION=$2
+echo $VERSION > ${DIR}/version
 ARCH=$(dpkg --print-architecture)
 
 SNAP_DIR=${DIR}/build/snap
