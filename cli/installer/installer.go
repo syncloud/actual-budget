@@ -59,15 +59,9 @@ func (i *Installer) Install() error {
 
 func (i *Installer) Configure() error {
 	if i.IsInstalled() {
-		if err := i.Upgrade(); err != nil {
-			return err
-		}
-	} else {
-		if err := i.Initialize(); err != nil {
-			return err
-		}
+		return i.Upgrade()
 	}
-	return i.BootstrapOpenID()
+	return i.Initialize()
 }
 
 func (i *Installer) IsInstalled() bool {
@@ -77,6 +71,9 @@ func (i *Installer) IsInstalled() bool {
 
 func (i *Installer) Initialize() error {
 	if err := i.StorageChange(); err != nil {
+		return err
+	}
+	if err := i.BootstrapOpenID(); err != nil {
 		return err
 	}
 	if err := os.WriteFile(i.installFile, []byte("installed"), 0644); err != nil {
