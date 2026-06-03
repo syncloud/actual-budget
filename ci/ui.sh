@@ -18,32 +18,7 @@ getent hosts $APP_DOMAIN | sed "s/$APP_DOMAIN/auth.$DOMAIN/g" | tee -a /etc/host
 cat /etc/hosts
 
 apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq sshpass openssh-client >/dev/null 2>&1 || true
-mkdir -p ${PLAYWRIGHT_ARTIFACT_DIR}
 
 cd ${DIR}/web/e2e
 npm ci
-set +e
 npx playwright test --project="${PROJECT}"
-EXIT=$?
-set -e
-
-ART=${DIR}/artifact
-SHOTS=${ART}/screenshots-${PROJECT}
-VIDEOS=${ART}/videos-${PROJECT}
-mkdir -p ${SHOTS} ${VIDEOS}
-
-if [ -d test-results ]; then
-    for d in test-results/*/; do
-        name=$(basename "$d")
-        i=0
-        for img in "$d"*.png; do
-            [ -f "$img" ] || continue
-            suffix=$([ $i -eq 0 ] && echo "" || echo "-$i")
-            cp "$img" "${SHOTS}/${name}${suffix}.png"
-            i=$((i+1))
-        done
-        [ -f "${d}video.webm" ] && cp "${d}video.webm" "${VIDEOS}/${name}.webm"
-    done
-fi
-
-exit ${EXIT}
