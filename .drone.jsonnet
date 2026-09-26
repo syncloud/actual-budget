@@ -1,5 +1,5 @@
 local name = 'actual-budget';
-local version = '25.2.1';
+local version = '26.9.0';
 local go = '1.24.0';
 local nginx = '1.24.0';
 local python = '3.12-slim-bookworm';
