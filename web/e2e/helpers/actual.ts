@@ -117,3 +117,17 @@ export async function addTransactions (page: Page, txns: Txn[], info?: TestInfo)
   await page.keyboard.press('Escape').catch(() => {})
   await page.waitForLoadState('networkidle').catch(() => {})
 }
+
+export async function openAccount (page: Page, name = 'Checking') {
+  const link = page
+    .getByRole('link', { name: new RegExp('^' + name, 'i') })
+    .or(page.getByText(new RegExp('^' + name + '$', 'i')))
+    .first()
+  await link.waitFor({ state: 'visible', timeout: 60_000 })
+  await link.click()
+  await page.waitForLoadState('networkidle').catch(() => {})
+}
+
+export async function transactionVisible (page: Page, payee: string): Promise<boolean> {
+  return await page.getByText(payee, { exact: false }).first().isVisible().catch(() => false)
+}
