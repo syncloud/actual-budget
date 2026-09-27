@@ -5,9 +5,9 @@ import { ensureBudgetOpen, addAccount, addTransactions, openAccount, transaction
 
 test.use({ video: 'on' })
 
-const baseURL = `https://actual-budget.${process.env.PLAYWRIGHT_DOMAIN || 'bookworm.com'}`
-const username = process.env.PLAYWRIGHT_USER || 'user'
-const password = process.env.PLAYWRIGHT_PASSWORD || 'Password1'
+const baseURL = `https://actual-budget.${process.env.PLAYWRIGHT_DOMAIN}`
+const username = process.env.PLAYWRIGHT_USER as string
+const password = process.env.PLAYWRIGHT_PASSWORD as string
 
 test('seed budget data that must survive the upgrade', async ({ page }, info) => {
   await loginViaAuthelia(page, baseURL, username, password, info)
@@ -26,5 +26,8 @@ test('seed budget data that must survive the upgrade', async ({ page }, info) =>
 
   await shoot(page, info, 'seeded')
   await expect(page.getByText('Salary', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText(/2[,.]?500\.00/).first()).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText('Groceries', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText(/42\.50/).first()).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText(/3[,.]?457\.50/).first()).toBeVisible({ timeout: 30_000 })
 })
