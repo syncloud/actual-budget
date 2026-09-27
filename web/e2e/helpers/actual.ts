@@ -40,6 +40,7 @@ export async function ensureBudgetOpen (page: Page, name = 'Test Budget') {
     await existingFile.click()
   } else {
     await clickFirst(page, [
+      /start budgeting/i,
       /create blank budget/i,
       /start fresh/i,
       /create new file/i,
