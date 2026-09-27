@@ -28,7 +28,7 @@ export async function dismissToasts (page: Page) {
 export async function openApp (page: Page) {
   await page.goto('/')
   await page.locator('#root').first().waitFor({ state: 'attached', timeout: 30_000 })
-  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.waitForTimeout(500)
 }
 
 export async function ensureBudgetOpen (page: Page, name = 'Test Budget') {
@@ -115,7 +115,7 @@ export async function addTransactions (page: Page, txns: Txn[], info?: TestInfo)
   }
 
   await page.keyboard.press('Escape').catch(() => {})
-  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.waitForTimeout(500)
 }
 
 export async function openAccount (page: Page, name = 'Checking') {
@@ -125,7 +125,7 @@ export async function openAccount (page: Page, name = 'Checking') {
     .first()
   await link.waitFor({ state: 'visible', timeout: 60_000 })
   await link.click()
-  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.waitForTimeout(500)
 }
 
 export async function transactionVisible (page: Page, payee: string): Promise<boolean> {

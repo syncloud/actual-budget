@@ -16,8 +16,7 @@ export async function loginViaAuthelia (
   password: string,
   info?: TestInfo
 ) {
-  await page.goto(baseURL)
-  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.goto(baseURL, { waitUntil: 'domcontentloaded' })
   await shootStep(page, info, 'login-00-landing.png')
 
   if (!onAuthHost(page)) {
@@ -30,7 +29,6 @@ export async function loginViaAuthelia (
       page.waitForURL((url) => new URL(url.toString()).host.startsWith('auth.'), { timeout: 30_000 }).catch(() => {}),
       signIn.click()
     ])
-    await page.waitForLoadState('networkidle').catch(() => {})
     await shootStep(page, info, 'login-01-after-signin.png')
   }
 
