@@ -22,8 +22,8 @@ export async function loginViaAuthelia (
 
   if (!onAuthHost(page)) {
     const signIn = page
-      .getByRole('button', { name: /sign in/i })
-      .or(page.getByRole('link', { name: /sign in/i }))
+      .getByRole('button', { name: /sign in|start using openid|openid/i })
+      .or(page.getByRole('link', { name: /sign in|start using openid|openid/i }))
       .first()
     await signIn.waitFor({ state: 'visible', timeout: 20_000 })
     await Promise.all([
