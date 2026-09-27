@@ -30,6 +30,6 @@ def test_start(module_setup, app, device_host, domain, device):
 
 
 def test_install_prev(device, app_domain):
-    device.run_ssh('snap remove {0}'.format(APP), throw=False)
+    device.run_ssh('snap remove --purge {0}'.format(APP), throw=False)
     device.run_ssh('snap install {0}'.format(APP), retries=10)
     wait_for_rest(requests.session(), "https://{0}".format(app_domain), 200, 100)
