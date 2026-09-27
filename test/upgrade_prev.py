@@ -23,17 +23,10 @@ def module_setup(request, device, artifact_dir):
     request.addfinalizer(module_teardown)
 
 
-def test_start(module_setup, device, device_host, app, domain):
+def test_start(module_setup, app, device_host, domain, device):
     add_host_alias(app, device_host, domain)
-    device.run_ssh('date', retries=100)
+    device.activated()
     device.run_ssh('mkdir -p {0}'.format(TMP_DIR), throw=False)
-
-
-@pytest.mark.flaky(retries=50, delay=10)
-def test_activate_device(device):
-    device.run_ssh('rm -f /var/snap/platform/current/syncloud.crt', throw=False)
-    response = device.activate_custom()
-    assert response.status_code == 200, response.text
 
 
 def test_install_prev(device, app_domain):

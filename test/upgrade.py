@@ -26,6 +26,7 @@ def module_setup(request, device, artifact_dir):
 
 def test_start(module_setup, device, device_host, app, domain):
     add_host_alias(app, device_host, domain)
+    device.activated()
     device.run_ssh('mkdir -p {0}'.format(TMP_DIR), throw=False)
 
 
