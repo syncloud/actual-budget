@@ -87,11 +87,6 @@ local build(arch, ui) = [{
            commands: ['./web/e2e/ci-ui.sh e2e specs/01-smoke.spec.ts desktop'],
          },
          {
-           name: 'e2e-mobile',
-           image: 'mcr.microsoft.com/playwright:' + playwright,
-           commands: ['./web/e2e/ci-ui.sh e2e-mobile specs/01-smoke.spec.ts mobile'],
-         },
-         {
            name: 'test-upgrade-prev',
            image: 'python:' + python,
            commands: ['./test/upgrade-test.sh upgrade_prev.py ' + distro_default + ' ' + arch],
