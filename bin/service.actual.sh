@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 export ACTUAL_CONFIG_PATH=${SNAP_DATA}/config/config.json
+export ACTUAL_SOCKET=${SNAP_DATA}/actual.sock
 export NODE_ENV=production
 export NODE_EXTRA_CA_CERTS=/var/snap/platform/current/syncloud.ca.crt
 

@@ -1,5 +1,4 @@
 {
-  "port": "{{ .Socket }}",
   "hostname": "127.0.0.1",
   "dataDir": "{{ .StorageDir }}",
   "serverFiles": "{{ .ServerFiles }}",

@@ -38,7 +38,7 @@ local build(arch, ui) = [{
   ] + [
     {
       name: 'actual',
-      image: 'actualbudget/actual-server:' + version,
+      image: 'syncloud/actual-server:' + version + '-socket',
       commands: [
         './actual/build.sh',
       ],
