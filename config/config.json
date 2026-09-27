@@ -7,7 +7,7 @@
   "loginMethod": "openid",
   "allowedLoginMethods": ["openid"],
   "openId": {
-    "issuer": "{{ .AuthUrl }}",
+    "discoveryURL": "{{ .AuthUrl }}",
     "client_id": "{{ .App }}",
     "client_secret": "{{ .ClientSecret }}",
     "server_hostname": "{{ .AppUrl }}",
