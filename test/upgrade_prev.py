@@ -30,9 +30,7 @@ def test_start(module_setup, app, device_host, domain, device):
 
 
 def test_install_prev(device, app_domain):
-    device.run_ssh(
-        "find /opt /data /var /mnt /srv -type d \\( -name server-files -o -name user-files \\) "
-        "-path '*{0}*' -prune -exec rm -rf {{}} + 2>/dev/null; true".format(APP), throw=False)
     device.run_ssh('snap remove --purge {0}'.format(APP), throw=False)
+    device.run_ssh('rm -rf /opt/disk/internal/{0} /opt/disk/external/{0}'.format(APP), throw=False)
     device.run_ssh('snap install {0}'.format(APP), retries=10)
     wait_for_rest(requests.session(), "https://{0}".format(app_domain), 200, 100)
