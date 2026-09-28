@@ -25,17 +25,29 @@ export async function dismissToasts (page: Page) {
   }
 }
 
-export async function openApp (page: Page) {
-  await page.goto('/')
-  await page.locator('#root').first().waitFor({ state: 'attached', timeout: 30_000 })
-  await page.waitForTimeout(500)
+export async function createBudget (page: Page) {
+  await page.getByRole('button', { name: 'Start budgeting' }).click()
+  await page.getByText(/^reports$/i).first().waitFor({ state: 'visible', timeout: 90_000 })
+  await dismissToasts(page)
 }
 
-export async function ensureBudgetOpen (page: Page, name = 'Test Budget') {
+export async function openExistingBudget (page: Page) {
+  await page.getByText(/available for download/i).click()
+  await page.getByText(/^reports$/i).first().waitFor({ state: 'visible', timeout: 90_000 })
+  await dismissToasts(page)
+}
+
+export async function ensureBudgetOpen (page: Page) {
   const reportsNav = page.getByText(/^reports$/i).first()
   if (await reportsNav.isVisible().catch(() => false)) return
 
   const existingFile = page.getByText(/available for download/i).first()
+  const createEntry = page.getByText(/start budgeting|create new file/i).first()
+  await Promise.race([
+    existingFile.waitFor({ state: 'visible', timeout: 60_000 }).catch(() => {}),
+    createEntry.waitFor({ state: 'visible', timeout: 60_000 }).catch(() => {})
+  ])
+
   if (await existingFile.isVisible().catch(() => false)) {
     await existingFile.click()
   } else {
@@ -57,28 +69,20 @@ export async function addAccount (page: Page, name = 'Checking', balance = '1000
   if (await page.getByText(name, { exact: false }).first().isVisible().catch(() => false)) {
     return
   }
-  const addBtn = page.getByRole('button', { name: /^add account$/i }).first()
+  const addBtn = page.getByRole('button', { name: /^add account$/i })
+    .or(page.getByText(/^add account$/i))
+    .first()
   await addBtn.waitFor({ state: 'visible', timeout: 60_000 })
   await addBtn.click()
 
   await clickFirst(page, [/create a local account/i, /create local account/i])
-  if (info) await shoot(page, info, 'account-modal')
 
-  const nameField = page
-    .getByPlaceholder(/account name|name/i)
-    .or(page.getByLabel(/account name|name/i))
-    .or(page.getByRole('textbox').first())
-    .first()
+  const nameField = page.getByLabel(/^name/i).first()
   await nameField.waitFor({ state: 'visible', timeout: 20_000 })
+  if (info) await shoot(page, info, 'account-modal')
   await nameField.fill(name)
 
-  const balanceField = page
-    .getByPlaceholder(/balance|0\.00/i)
-    .or(page.getByLabel(/balance/i))
-    .first()
-  if (await balanceField.isVisible().catch(() => false)) {
-    await balanceField.fill(balance)
-  }
+  await page.getByLabel(/^balance/i).first().fill(balance)
 
   await clickFirst(page, [/^create$/i, /^add$/i, /create account/i, /^add account$/i])
   await expect(page.getByText(name, { exact: false }).first()).toBeVisible({ timeout: 20_000 })

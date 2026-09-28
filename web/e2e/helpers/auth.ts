@@ -1,12 +1,7 @@
 import { Page, TestInfo } from '@playwright/test'
 
-const onAuthHost = (page: Page) => {
-  try { return new URL(page.url()).host.startsWith('auth.') } catch { return false }
-}
-
 async function shootStep (page: Page, info: TestInfo | undefined, name: string) {
-  if (!info) return
-  try { await page.screenshot({ path: info.outputPath(name), fullPage: false }) } catch {}
+  if (info) await page.screenshot({ path: info.outputPath(name) })
 }
 
 export async function loginViaAuthelia (
@@ -16,43 +11,14 @@ export async function loginViaAuthelia (
   password: string,
   info?: TestInfo
 ) {
-  await page.goto(baseURL, { waitUntil: 'domcontentloaded' })
-  await shootStep(page, info, 'login-00-landing.png')
+  await page.goto(baseURL)
+  await page.getByRole('button', { name: /(Start using|Sign in with) OpenID/ }).click()
+  await shootStep(page, info, 'login-provider.png')
 
-  if (!onAuthHost(page)) {
-    const signIn = page
-      .getByRole('button', { name: /sign in|start using openid|openid/i })
-      .or(page.getByRole('link', { name: /sign in|start using openid|openid/i }))
-      .first()
-    await signIn.waitFor({ state: 'visible', timeout: 20_000 })
-    await Promise.all([
-      page.waitForURL((url) => new URL(url.toString()).host.startsWith('auth.'), { timeout: 30_000 }).catch(() => {}),
-      signIn.click()
-    ])
-    await shootStep(page, info, 'login-01-after-signin.png')
-  }
+  await page.getByPlaceholder('Username').fill(username)
+  await page.getByPlaceholder('Password').fill(password)
+  await page.getByRole('button', { name: 'Sign in' }).click()
 
-  if (onAuthHost(page)) {
-    const userSel = 'input[name="username"], input#username-textfield, input[autocomplete="username"], input[type="text"]'
-    const passSel = 'input[name="password"], input#password-textfield, input[autocomplete="current-password"], input[type="password"]'
-    const submitSel = 'button#sign-in-button, button[type="submit"], button:has-text("Sign in"), button:has-text("Login")'
-
-    await page.locator(userSel).first().waitFor({ state: 'visible', timeout: 20_000 })
-    await page.locator(userSel).first().fill(username)
-    await page.locator(passSel).first().fill(password)
-    await Promise.all([
-      page.waitForURL((url) => !new URL(url.toString()).host.startsWith('auth.'), { timeout: 30_000 }).catch(() => {}),
-      page.locator(submitSel).first().click()
-    ])
-    await page.waitForLoadState('networkidle').catch(() => {})
-    await shootStep(page, info, 'login-02-after-auth.png')
-  }
-
-  try {
-    await page.locator('#root').first().waitFor({ state: 'attached', timeout: 30_000 })
-  } catch (e) {
-    const title = await page.title().catch(() => '?')
-    throw new Error(`login did not land on the app: url=${page.url()} title="${title}"`)
-  }
-  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.getByText(/logged in as/i).waitFor({ state: 'visible', timeout: 30_000 })
+  await shootStep(page, info, 'login-done.png')
 }

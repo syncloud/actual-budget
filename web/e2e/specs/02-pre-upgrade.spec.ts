@@ -10,7 +10,7 @@ const password = process.env.PLAYWRIGHT_PASSWORD as string
 
 test('seed budget data that must survive the upgrade', async ({ page }, info) => {
   await loginViaAuthelia(page, baseURL, username, password, info)
-  await ensureBudgetOpen(page, 'Test Budget')
+  await ensureBudgetOpen(page)
 
   await addAccount(page, 'Checking', '1000', info)
   await openAccount(page, 'Checking')

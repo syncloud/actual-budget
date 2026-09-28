@@ -8,7 +8,7 @@ export default defineConfig({
   timeout: 120_000,
   expect: { timeout: 20_000 },
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   reporter: [['list']],
   globalTeardown: './global-teardown.ts',
   use: {

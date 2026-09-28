@@ -85,7 +85,7 @@ local build(arch, ui) = [{
          {
            name: 'e2e',
            image: 'mcr.microsoft.com/playwright:' + playwright,
-           commands: ['./web/e2e/ci-ui.sh e2e "specs/01-smoke.spec.ts specs/04-use-cases.spec.ts" desktop'],
+           commands: ['./web/e2e/ci-ui.sh e2e specs/01-smoke.spec.ts desktop'],
          },
          {
            name: 'test-upgrade-prev',

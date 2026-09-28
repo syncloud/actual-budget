@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { shoot } from '../helpers/screenshot'
 import { loginViaAuthelia } from '../helpers/auth'
-import { ensureBudgetOpen, openAccount, assertAmount } from '../helpers/actual'
+import { openExistingBudget, openAccount, assertAmount } from '../helpers/actual'
 
 test.use({ video: 'on' })
 
@@ -11,7 +11,7 @@ const password = process.env.PLAYWRIGHT_PASSWORD as string
 
 test('budget data survived the upgrade', async ({ page }, info) => {
   await loginViaAuthelia(page, baseURL, username, password, info)
-  await ensureBudgetOpen(page, 'Test Budget')
+  await openExistingBudget(page)
   await shoot(page, info, 'post-upgrade-index')
 
   await expect(page.getByText('Checking', { exact: false }).first()).toBeVisible({ timeout: 60_000 })
