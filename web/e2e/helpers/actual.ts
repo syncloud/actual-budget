@@ -132,3 +132,8 @@ export async function openAccount (page: Page, name = 'Checking') {
 export async function transactionVisible (page: Page, payee: string): Promise<boolean> {
   return await page.getByText(payee, { exact: false }).first().isVisible().catch(() => false)
 }
+
+export async function assertAmount (page: Page, amount: RegExp, info?: TestInfo, shot?: string) {
+  await expect(page.getByText(amount).first()).toBeVisible({ timeout: 30_000 })
+  if (info && shot) await shoot(page, info, shot)
+}

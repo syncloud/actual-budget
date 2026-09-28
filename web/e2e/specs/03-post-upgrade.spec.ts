@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { shoot } from '../helpers/screenshot'
 import { loginViaAuthelia } from '../helpers/auth'
-import { ensureBudgetOpen, openAccount } from '../helpers/actual'
+import { ensureBudgetOpen, openAccount, assertAmount } from '../helpers/actual'
 
 test.use({ video: 'on' })
 
@@ -16,14 +16,10 @@ test('budget data survived the upgrade', async ({ page }, info) => {
 
   await expect(page.getByText('Checking', { exact: false }).first()).toBeVisible({ timeout: 60_000 })
   await openAccount(page, 'Checking')
-  await shoot(page, info, 'post-upgrade-account')
 
-  // The rows must survive, and so must their amounts (the point of the test).
   await expect(page.getByText('Salary', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText(/2[,.]?500\.00/).first()).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText('Groceries', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText(/42\.50/).first()).toBeVisible({ timeout: 30_000 })
-
-  // Account balance = 1000 starting + 2500.00 - 42.50 = 3457.50.
-  await expect(page.getByText(/3[,.]?457\.50/).first()).toBeVisible({ timeout: 30_000 })
+  await assertAmount(page, /2[,.]?500\.00/, info, 'post-upgrade-income')
+  await assertAmount(page, /42\.50/, info, 'post-upgrade-expense')
+  await assertAmount(page, /3[,.]?457\.50/, info, 'post-upgrade-balance')
 })

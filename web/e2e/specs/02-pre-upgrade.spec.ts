@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test'
-import { shoot } from '../helpers/screenshot'
 import { loginViaAuthelia } from '../helpers/auth'
-import { ensureBudgetOpen, addAccount, addTransactions, openAccount, transactionVisible } from '../helpers/actual'
+import { ensureBudgetOpen, addAccount, addTransactions, openAccount, transactionVisible, assertAmount } from '../helpers/actual'
 
 test.use({ video: 'on' })
 
@@ -24,10 +23,9 @@ test('seed budget data that must survive the upgrade', async ({ page }, info) =>
     await openAccount(page, 'Checking')
   }
 
-  await shoot(page, info, 'seeded')
   await expect(page.getByText('Salary', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText(/2[,.]?500\.00/).first()).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText('Groceries', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText(/42\.50/).first()).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText(/3[,.]?457\.50/).first()).toBeVisible({ timeout: 30_000 })
+  await assertAmount(page, /2[,.]?500\.00/, info, 'seeded-income')
+  await assertAmount(page, /42\.50/, info, 'seeded-expense')
+  await assertAmount(page, /3[,.]?457\.50/, info, 'seeded-balance')
 })
