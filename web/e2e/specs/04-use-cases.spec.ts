@@ -8,7 +8,7 @@ const baseURL = `https://actual-budget.${process.env.PLAYWRIGHT_DOMAIN}`
 const username = process.env.PLAYWRIGHT_USER as string
 const password = process.env.PLAYWRIGHT_PASSWORD as string
 
-test('income and an expense produce the right running balance', async ({ page }, info) => {
+test('accounts track income, expenses and their own running balance', async ({ page }, info) => {
   await loginViaAuthelia(page, baseURL, username, password, info)
   await ensureBudgetOpen(page, 'Test Budget')
 
@@ -21,15 +21,9 @@ test('income and an expense produce the right running balance', async ({ page },
     ], info)
     await openAccount(page, 'Checking')
   }
-
   await assertAmount(page, /2[,.]?500\.00/, info, 'checking-income')
   await assertAmount(page, /42\.50/, info, 'checking-expense')
   await assertAmount(page, /3[,.]?457\.50/, info, 'checking-balance')
-})
-
-test('a second account keeps its own balance', async ({ page }, info) => {
-  await loginViaAuthelia(page, baseURL, username, password, info)
-  await ensureBudgetOpen(page, 'Test Budget')
 
   await addAccount(page, 'Savings', '5000', info)
   await openAccount(page, 'Savings')
@@ -40,7 +34,6 @@ test('a second account keeps its own balance', async ({ page }, info) => {
     ], info)
     await openAccount(page, 'Savings')
   }
-
   await assertAmount(page, /1[,.]?500\.00/, info, 'savings-income')
   await assertAmount(page, /25\.00/, info, 'savings-expense')
   await assertAmount(page, /6[,.]?475\.00/, info, 'savings-balance')
