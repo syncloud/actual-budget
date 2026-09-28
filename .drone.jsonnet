@@ -1,5 +1,5 @@
 local name = 'actual-budget';
-local version = '25.2.1';
+local version = '26.9.0';
 local go = '1.24.0';
 local nginx = '1.24.0';
 local python = '3.12-slim-bookworm';
@@ -7,6 +7,7 @@ local platform = '26.04.10';
 local playwright = 'v1.59.1-jammy';
 local store_publisher = 'stable-346';
 local distros = ['bookworm', 'buster'];
+local distro_default = 'bookworm';
 
 local platform_image(distro, arch) =
   'syncloud/platform-' + distro + '-' + arch + ':' + platform;
@@ -37,7 +38,8 @@ local build(arch, ui) = [{
   ] + [
     {
       name: 'actual',
-      image: 'actualbudget/actual-server:' + version,
+      image: 'syncloud/actual-server:' + version + '-socket',
+      pull: 'always',
       commands: [
         './actual/build.sh',
       ],
@@ -81,11 +83,30 @@ local build(arch, ui) = [{
          for distro in distros
        ] + (if ui then [
          {
-           name: 'test-ui-' + project,
+           name: 'e2e',
            image: 'mcr.microsoft.com/playwright:' + playwright,
-           commands: ['./web/e2e/ci-ui.sh ' + project],
-         }
-         for project in ['desktop', 'mobile']
+           commands: ['./web/e2e/ci-ui.sh e2e specs/01-smoke.spec.ts desktop'],
+         },
+         {
+           name: 'test-upgrade-prev',
+           image: 'python:' + python,
+           commands: ['./test/upgrade-test.sh upgrade_prev.py ' + distro_default + ' ' + arch],
+         },
+         {
+           name: 'e2e-before-upgrade',
+           image: 'mcr.microsoft.com/playwright:' + playwright,
+           commands: ['./web/e2e/ci-ui.sh e2e-before-upgrade specs/02-pre-upgrade.spec.ts desktop'],
+         },
+         {
+           name: 'test-upgrade',
+           image: 'python:' + python,
+           commands: ['./test/upgrade-test.sh upgrade.py ' + distro_default + ' ' + arch],
+         },
+         {
+           name: 'e2e-after-upgrade',
+           image: 'mcr.microsoft.com/playwright:' + playwright,
+           commands: ['./web/e2e/ci-ui.sh e2e-after-upgrade specs/03-post-upgrade.spec.ts desktop'],
+         },
        ] else []) + [
     {
       name: 'publish',
@@ -141,5 +162,4 @@ local build(arch, ui) = [{
 }];
 
 build('amd64', true) +
-build('arm64', false) +
-build('arm', false)
+build('arm64', false)
