@@ -20,7 +20,8 @@ git fetch -q --depth 1 https://github.com/actualbudget/actual.git tag ${UPSTREAM
 git diff --exit-code ${UPSTREAM_TAG} HEAD -- yarn.lock
 
 corepack enable
-yarn install --immutable
+yarn workspaces focus actual @actual-app/web @actual-app/sync-server
+git diff --exit-code yarn.lock
 NODE_OPTIONS=--max_old_space_size=4096 yarn build:server
 
 tar czf ${OUT}/actual-js.tar.gz \
