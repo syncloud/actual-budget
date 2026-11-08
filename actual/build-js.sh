@@ -2,7 +2,7 @@
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 REPO=$1
-COMMIT=$2
+BRANCH=$2
 UPSTREAM_TAG=$3
 SRC=${DIR}/../build/actual-src
 OUT=${DIR}/../artifact/shared
@@ -13,8 +13,9 @@ cd ${SRC}
 
 git init -q
 git remote add origin ${REPO}
-git fetch -q --depth 1 origin ${COMMIT}
+git fetch -q --depth 1 origin ${BRANCH}
 git checkout -q FETCH_HEAD
+git rev-parse HEAD
 git fetch -q --depth 1 https://github.com/actualbudget/actual.git tag ${UPSTREAM_TAG}
 git diff --exit-code ${UPSTREAM_TAG} HEAD -- yarn.lock
 

@@ -1,7 +1,7 @@
 local name = 'actual-budget';
 local version = '26.11.0';
 local actual_repo = 'https://github.com/cyberb/actual.git';
-local actual_commit = '1b9b1c629b8b54652dc56143461678d40bddc07b';
+local actual_branch = 'syncloud';
 local node = '24.22.1-bookworm';
 local alpine = '3.21';
 local go = '1.24.0';
@@ -29,7 +29,7 @@ local shared = [{
       name: 'actual js',
       image: 'node:' + node,
       commands: [
-        './actual/build-js.sh ' + actual_repo + ' ' + actual_commit + ' v' + version,
+        './actual/build-js.sh ' + actual_repo + ' ' + actual_branch + ' v' + version,
       ],
     },
     {
