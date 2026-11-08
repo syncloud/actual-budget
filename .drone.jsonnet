@@ -1,5 +1,9 @@
 local name = 'actual-budget';
-local version = '26.9.0';
+local version = '26.11.0';
+local actual_repo = 'https://github.com/cyberb/actual.git';
+local actual_commit = '1b9b1c629b8b54652dc56143461678d40bddc07b';
+local node = '24.22.1-bookworm';
+local alpine = '3.21';
 local go = '1.24.0';
 local nginx = '1.24.0';
 local python = '3.12-slim-bookworm';
@@ -12,6 +16,42 @@ local distro_default = 'bookworm';
 local platform_image(distro, arch) =
   'syncloud/platform-' + distro + '-' + arch + ':' + platform;
 
+local shared = [{
+  kind: 'pipeline',
+  type: 'docker',
+  name: 'shared',
+  platform: {
+    os: 'linux',
+    arch: 'amd64',
+  },
+  steps: [
+    {
+      name: 'actual js',
+      image: 'node:' + node,
+      commands: [
+        './actual/build-js.sh ' + actual_repo + ' ' + actual_commit + ' v' + version,
+      ],
+    },
+    {
+      name: 'upload',
+      image: 'appleboy/drone-scp:1.6.4',
+      settings: {
+        host: { from_secret: 'artifact_host' },
+        username: 'artifact',
+        key: { from_secret: 'artifact_key' },
+        timeout: '2m',
+        command_timeout: '2m',
+        target: '/home/artifact/repo/' + name + '/${DRONE_BUILD_NUMBER}-shared',
+        source: 'artifact/shared/*',
+        strip_components: 2,
+      },
+    },
+  ],
+  trigger: {
+    event: ['push'],
+  },
+}];
+
 local build(arch, ui) = [{
   kind: 'pipeline',
   type: 'docker',
@@ -20,7 +60,18 @@ local build(arch, ui) = [{
     os: 'linux',
     arch: arch,
   },
+  depends_on: ['shared'],
   steps: [
+    {
+      name: 'actual js',
+      image: 'alpine:' + alpine,
+      environment: {
+        ARTIFACT_HOST: { from_secret: 'artifact_host' },
+      },
+      commands: [
+        './actual/fetch-js.sh ${DRONE_BUILD_NUMBER}',
+      ],
+    },
     {
       name: 'nginx',
       image: 'nginx:' + nginx,
@@ -38,8 +89,7 @@ local build(arch, ui) = [{
   ] + [
     {
       name: 'actual',
-      image: 'syncloud/actual-server:' + version + '-socket',
-      pull: 'always',
+      image: 'actualbudget/actual-server:' + version,
       commands: [
         './actual/build.sh',
       ],
@@ -161,5 +211,6 @@ local build(arch, ui) = [{
   ],
 }];
 
+shared +
 build('amd64', true) +
 build('arm64', false)
